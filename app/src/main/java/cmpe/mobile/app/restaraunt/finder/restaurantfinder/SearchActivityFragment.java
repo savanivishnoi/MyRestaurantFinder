@@ -22,6 +22,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import oauth.signpost.OAuthConsumer;
 import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
@@ -37,14 +38,16 @@ public class SearchActivityFragment extends Fragment {
     ListView listView;
     SearchResultsAdapter mSearchResultsAdapter;
     ArrayList<SearchResults> mSearchResults;
-
+    public static final String QUERY_URL = "SearchActivityFragment.QUERY_URL";
     public SearchActivityFragment() {
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        String url = (String)getArguments().getString(QUERY_URL) + "radius_filter=17000&limit=20&";
+        SearchAsyncTask task = new SearchAsyncTask();
+        task.execute(url);
     }
 
     @Override
@@ -56,6 +59,16 @@ public class SearchActivityFragment extends Fragment {
         mSearchResults = new ArrayList<>();
 
         return searchView;
+    }
+
+    public static SearchActivityFragment getUrl(String url){
+        Bundle args = new Bundle();
+        args.putString(QUERY_URL,url);
+
+        SearchActivityFragment searchActivityFragment = new SearchActivityFragment();
+        searchActivityFragment.setArguments(args);
+
+        return searchActivityFragment;
     }
 
     public class SearchAsyncTask extends AsyncTask<String ,Void , Boolean> {
@@ -84,10 +97,11 @@ public class SearchActivityFragment extends Fragment {
             try {
                 // sign the request
                 consumer.sign(request);
+                Log.i("URL_used",request.getURI().toString());
                 HttpClient httpClient = new DefaultHttpClient();
                 HttpResponse response = httpClient.execute(request);
                 int responseStatus = response.getStatusLine().getStatusCode();
-
+                Log.i("OauthTest", String.valueOf(response.getStatusLine()));
                 if(responseStatus == 200) {
                     String json_string = EntityUtils.toString(response.getEntity());
                     JSONObject jsonObject = new JSONObject(json_string);
@@ -99,10 +113,11 @@ public class SearchActivityFragment extends Fragment {
                         SearchResults searchResults = new SearchResults();
                         JSONObject requiredObject =  jsonArray.getJSONObject(i);
                         searchResults.setName(requiredObject.getString("name"));
-                      //  searchResults.setDisplayAddress(requiredObject.getJSONArray("display_address")); categories;
+                        //searchResults.setDisplayAddress(createList(requiredObject.getJSONArray("display_address")));
+                        //searchResults.setCategories(createList(requiredObject.getJSONArray("categories")));
                         searchResults.setImageUrl(requiredObject.getString("image_url").replace('\\',' ').trim());
                         searchResults.setReviewCount(requiredObject.getInt("review_count"));
-                        searchResults.setRatingImgUrl(requiredObject.getString("rating_img_url"));
+                        searchResults.setRatingImgUrl(requiredObject.getString("rating_img_url").replace('\\',' ').trim());
                         searchResults.setSnippetText(requiredObject.getString("snippet_text"));
 
                         mSearchResults.add(searchResults);
@@ -128,13 +143,28 @@ public class SearchActivityFragment extends Fragment {
             return false;
         }
 
+        private List<String> createList(JSONArray jsonArray){
+            if(jsonArray.length() > 0){
+                ArrayList<String> requiredList = new ArrayList<>();
+                for(int i = 0 ;i < jsonArray.length(); i ++){
+                    try {
+                        requiredList.add(jsonArray.get(i).toString());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+            return null;
+        }
         @Override
         protected void onPostExecute(Boolean result) {
             super.onPostExecute(result);
 
             if(result.equals(true)){
+                Log.i("Testing_mSearchResults",mSearchResults.get(1).getName());
                 SearchResultsAdapter searchResultsAdapter = new SearchResultsAdapter
-                        (getActivity().getApplicationContext(),R.layout.search_result_row, mSearchResults );
+                        (getActivity(),R.layout.search_result_row, mSearchResults );
             }else{
                 Toast.makeText(getContext(),"No results to show", Toast.LENGTH_SHORT).show();
             }

@@ -103,9 +103,9 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_camera) {
 
-            /*android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
-            SearchFragment searchFragment = new SearchFragment();
-            fragmentManager.beginTransaction().replace(R.id.fragmentContainer, searchFragment).commit();*/
+            android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+            SearchActivityFragment searchFragment = SearchActivityFragment.getUrl("location=sanjose&term=restaurants&");
+            fragmentManager.beginTransaction().replace(R.id.fragmentContainer, searchFragment).commit();
             Log.i("Log_nav_camera", "Search fragment updated");
 
         } else if (id == R.id.nav_gallery) {

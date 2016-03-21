@@ -1,6 +1,9 @@
 package cmpe.mobile.app.restaraunt.finder.restaurantfinder;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +11,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 
 /**
@@ -24,7 +30,7 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
         super(context, resource, searchResults);
         mSearchResults = searchResults;
         this.resource = resource;
-        this.context = context;
+        this.context = context.getApplicationContext();
         view = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
     }
@@ -49,8 +55,11 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
             holder  = (ViewHolder)convertView.getTag();
 
         }
-        //holder.ratingsImage.setImageResource();
+
+        new DownloadImageTask(holder.restaurantImage).execute(mSearchResults.get(position).getImageUrl());
+        new DownloadImageTask(holder.ratingsImage).execute(mSearchResults.get(position).getRatingImgUrl());
         holder.restaurantName.setText(mSearchResults.get(position).getName());
+        holder.reviewCount.setText(mSearchResults.get(position).getReviewCount());
 
         return convertView;
     }
@@ -62,5 +71,35 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
         public TextView reviewCount;
         public TextView displayAddress;
         public TextView displayCategories;
+
+    }
+
+    private class DownloadImageTask extends AsyncTask<String, Void , Bitmap>{
+
+        ImageView mImageView;
+
+        private DownloadImageTask(ImageView imageView){
+            mImageView = imageView;
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... urls) {
+            String inputUrl = urls[0];
+            Bitmap imageIcon =  null;
+
+            try {
+                InputStream in = new URL(inputUrl).openStream();
+                imageIcon = BitmapFactory.decodeStream(in);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return imageIcon;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            mImageView.setImageBitmap(bitmap);
+        }
     }
 }
