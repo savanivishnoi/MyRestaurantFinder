@@ -19,7 +19,7 @@ public class SearchResults {
         private String name;
         private String ratingImgUrlSmall;
         private String url;
-        private List<List<String>> categories = new ArrayList<List<String>>();
+        private List<List<String>> categories = new ArrayList<>();
         private String phone;
         private String snippetText;
         private String imageUrl;
@@ -30,17 +30,19 @@ public class SearchResults {
         private boolean isClosed;
         private Location location;
         private String city;
-        private List<String> displayAddress = new ArrayList<String>();
+        private List<String> displayAddress = new ArrayList<>();
         private double geoAccuracy;
-        private List<String> neighborhoods = new ArrayList<String>();
+        private List<String> neighborhoods = new ArrayList<>();
         private String postalCode;
         private String countryCode;
-        private List<String> address = new ArrayList<String>();
+        private List<String> address = new ArrayList<>();
         private String stateCode;
         private double latitude;
         private double longitude;
 
+        public SearchResults(){
 
+        }
 
     /**
          *
