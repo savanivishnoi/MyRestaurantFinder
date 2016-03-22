@@ -10,7 +10,6 @@ import java.util.List;
  */
 public class SearchResults {
 
-
         private boolean isClaimed;
         private double rating;
         private String mobileUrl;
@@ -19,7 +18,7 @@ public class SearchResults {
         private String name;
         private String ratingImgUrlSmall;
         private String url;
-        private List<List<String>> categories = new ArrayList<>();
+        private String categories;
         private String phone;
         private String snippetText;
         private String imageUrl;
@@ -30,7 +29,7 @@ public class SearchResults {
         private boolean isClosed;
         private Location location;
         private String city;
-        private List<String> displayAddress = new ArrayList<>();
+        private String displayAddress;
         private double geoAccuracy;
         private List<String> neighborhoods = new ArrayList<>();
         private String postalCode;
@@ -193,7 +192,7 @@ public class SearchResults {
          * @return
          * The categories
          */
-        public List<List<String>> getCategories() {
+        public String getCategories() {
             return categories;
         }
 
@@ -202,7 +201,7 @@ public class SearchResults {
          * @param categories
          * The categories
          */
-        public void setCategories(List<List<String>> categories) {
+        public void setCategories(String categories) {
             this.categories = categories;
         }
 
@@ -431,7 +430,7 @@ public class SearchResults {
          * @return
          * The displayAddress
          */
-        public List<String> getDisplayAddress() {
+        public String getDisplayAddress() {
             return displayAddress;
         }
 
@@ -440,7 +439,7 @@ public class SearchResults {
          * @param displayAddress
          * The display_address
          */
-        public void setDisplayAddress(List<String> displayAddress) {
+        public void setDisplayAddress(String displayAddress) {
             this.displayAddress = displayAddress;
         }
 

@@ -1,13 +1,16 @@
 package cmpe.mobile.app.restaraunt.finder.restaurantfinder;
 
 
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -23,7 +26,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import oauth.signpost.OAuthConsumer;
 import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
@@ -40,6 +42,9 @@ public class SearchActivityFragment extends ListFragment {
     SearchResultsAdapter mSearchResultsAdapter;
     ArrayList<SearchResults> mSearchResults ;
     public static final String QUERY_URL = "SearchActivityFragment.QUERY_URL";
+    private static final String TAG = "SearchActivityFragment";
+    static ResultsDownloader<ImageView> mResultsDownloader;
+
     public SearchActivityFragment() {
     }
 
@@ -51,6 +56,26 @@ public class SearchActivityFragment extends ListFragment {
         SearchAsyncTask task = new SearchAsyncTask();
         task.execute(url);
         setRetainInstance(true);
+        mResultsDownloader = new ResultsDownloader<ImageView>(new Handler());
+        mResultsDownloader.setListener(new ResultsDownloader.Listener<ImageView>(){
+
+            @Override
+            public void ThumbnailDownloaded(ImageView imageView, Bitmap thumbnail) {
+                if(isVisible()){
+                    imageView.setImageBitmap(thumbnail);
+                }
+            }
+        });
+        mResultsDownloader.start();
+        mResultsDownloader.getLooper();
+        Log.i(TAG, "Background thread started");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mResultsDownloader.quit();
+        Log.i(TAG, "Background thread destroyed");
     }
 
     @Override
@@ -62,6 +87,12 @@ public class SearchActivityFragment extends ListFragment {
         mSearchResults = new ArrayList<>();
 
         return searchView;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mResultsDownloader.clearQueue();
     }
 
     public static SearchActivityFragment getUrl(String url){
@@ -91,20 +122,23 @@ public class SearchActivityFragment extends ListFragment {
 
             // create an HTTP request to a protected resource
 
-            String requestUrl = String.valueOf(url[0]);
-            Log.i("OAuthTestURL", requestUrl);
-            HttpGet request = new HttpGet("https://api.yelp.com/v2/search?" + requestUrl);
+            String requestUrl = null;
 
 
 
             try {
-                // sign the request
+                //Encoding the url
+               // requestUrl = URLEncoder.encode(String.valueOf(url[0]), "UTF-8");
+                requestUrl = String.valueOf(url[0]);
+                HttpGet request = new HttpGet("https://api.yelp.com/v2/search?" + requestUrl);
+
                 consumer.sign(request);
                 Log.i("URL_used",request.getURI().toString());
+
                 HttpClient httpClient = new DefaultHttpClient();
                 HttpResponse response = httpClient.execute(request);
                 int responseStatus = response.getStatusLine().getStatusCode();
-                Log.i("OauthTest", String.valueOf(response.getStatusLine()));
+
                 if(responseStatus == 200) {
                     String json_string = EntityUtils.toString(response.getEntity());
                     JSONObject jsonObject = new JSONObject(json_string);
@@ -116,11 +150,17 @@ public class SearchActivityFragment extends ListFragment {
                         SearchResults searchResults = new SearchResults();
                         JSONObject requiredObject =  jsonArray.getJSONObject(i);
                         searchResults.setName(requiredObject.getString("name"));
-                        //searchResults.setDisplayAddress(createList(requiredObject.getJSONArray("display_address")));
-                        //searchResults.setCategories(createList(requiredObject.getJSONArray("categories")));
+
+                        JSONObject display_address = requiredObject.getJSONObject("location");
+                        searchResults.setDisplayAddress(createDisplayAddress(display_address.getJSONArray("display_address")));
+
+                        searchResults.setCategories(createCategoriesString(requiredObject.getJSONArray("categories")));
+
                         searchResults.setImageUrl(requiredObject.getString("image_url"));
                         searchResults.setReviewCount(requiredObject.getInt("review_count"));
-                        searchResults.setRatingImgUrl(requiredObject.getString("rating_img_url"));
+
+
+                        searchResults.setRatingImgUrl(requiredObject.getString("rating_img_url_large"));
                         searchResults.setSnippetText(requiredObject.getString("snippet_text"));
 
                         mSearchResults.add(searchResults);
@@ -146,17 +186,47 @@ public class SearchActivityFragment extends ListFragment {
             return false;
         }
 
-        private List<String> createList(JSONArray jsonArray){
+        private String createCategoriesString(JSONArray jsonArray){
+            if(jsonArray.length() > 0){
+                String categories = "";
+
+                    for(int i = 0 ;i < jsonArray.length(); i ++){
+                        try {
+
+                            JSONArray jsonArrayTemp = (JSONArray) jsonArray.get(i);
+                            if(i == jsonArray.length()-1){
+                                categories += jsonArrayTemp.getString(0);
+                                continue;
+                            }
+                            categories += jsonArrayTemp.getString(0) + ", ";
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                return categories;
+            }
+            return null;
+        }
+
+        private String createDisplayAddress(JSONArray jsonArray){
+            String address = "";
             if(jsonArray.length() > 0){
                 ArrayList<String> requiredList = new ArrayList<>();
-                for(int i = 0 ;i < jsonArray.length(); i ++){
-                    try {
-                        requiredList.add(jsonArray.get(i).toString());
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
+                    for(int i = 0 ;i < jsonArray.length() - 1; i ++){
+                        try {
 
+                            if(i == jsonArray.length() - 2 ){
+                                address += jsonArray.get(i).toString();
+                                continue;
+                            }
+                            address += jsonArray.get(i).toString() + ", ";
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                return address;
             }
             return null;
         }

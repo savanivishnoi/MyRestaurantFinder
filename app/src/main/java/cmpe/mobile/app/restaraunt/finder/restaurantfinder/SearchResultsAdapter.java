@@ -26,6 +26,7 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
     Context context;
     LayoutInflater view;
 
+
     public SearchResultsAdapter(Context context, int resource, ArrayList<SearchResults> searchResults) {
         super(context, resource, searchResults);
         mSearchResults = searchResults;
@@ -55,12 +56,15 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
             holder  = (ViewHolder)convertView.getTag();
 
         }
-
-        new DownloadImageTask(holder.restaurantImage).execute(mSearchResults.get(position).getImageUrl());
-        new DownloadImageTask(holder.ratingsImage).execute(mSearchResults.get(position).getRatingImgUrl());
+        SearchActivityFragment.mResultsDownloader.queryResults(holder.restaurantImage, mSearchResults.get(position).getImageUrl());
+        SearchActivityFragment.mResultsDownloader.queryResults(holder.ratingsImage, mSearchResults.get(position).getRatingImgUrl());
+        /*new DownloadImageTask(holder.restaurantImage).execute(mSearchResults.get(position).getImageUrl());
+        new DownloadImageTask(holder.ratingsImage).execute(mSearchResults.get(position).getRatingImgUrl());*/
         holder.restaurantName.setText(mSearchResults.get(position).getName());
-//        holder.reviewCount.setText(mSearchResults.get(position).getReviewCount());
-
+        int reviewCount = mSearchResults.get(position).getReviewCount();
+        holder.reviewCount.setText(String.valueOf(reviewCount));
+        holder.displayAddress.setText(mSearchResults.get(position).getDisplayAddress());
+        holder.displayCategories.setText(mSearchResults.get(position).getCategories());
         return convertView;
     }
 
