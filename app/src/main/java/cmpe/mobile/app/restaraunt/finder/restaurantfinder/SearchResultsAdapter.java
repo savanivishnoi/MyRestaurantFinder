@@ -30,7 +30,7 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
         super(context, resource, searchResults);
         mSearchResults = searchResults;
         this.resource = resource;
-        this.context = context.getApplicationContext();
+        this.context = context;
         view = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
     }
@@ -59,7 +59,7 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
         new DownloadImageTask(holder.restaurantImage).execute(mSearchResults.get(position).getImageUrl());
         new DownloadImageTask(holder.ratingsImage).execute(mSearchResults.get(position).getRatingImgUrl());
         holder.restaurantName.setText(mSearchResults.get(position).getName());
-        holder.reviewCount.setText(mSearchResults.get(position).getReviewCount());
+//        holder.reviewCount.setText(mSearchResults.get(position).getReviewCount());
 
         return convertView;
     }
@@ -99,7 +99,7 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
-            mImageView.setImageBitmap(bitmap);
+           mImageView.setImageBitmap(bitmap);
         }
     }
 }

@@ -1,8 +1,9 @@
 package cmpe.mobile.app.restaraunt.finder.restaurantfinder;
 
+
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,11 +34,11 @@ import oauth.signpost.exception.OAuthMessageSignerException;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class SearchActivityFragment extends Fragment {
+public class SearchActivityFragment extends ListFragment {
 
     ListView listView;
     SearchResultsAdapter mSearchResultsAdapter;
-    ArrayList<SearchResults> mSearchResults;
+    ArrayList<SearchResults> mSearchResults ;
     public static final String QUERY_URL = "SearchActivityFragment.QUERY_URL";
     public SearchActivityFragment() {
     }
@@ -46,8 +47,10 @@ public class SearchActivityFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         String url = (String)getArguments().getString(QUERY_URL) + "radius_filter=17000&limit=20&";
+
         SearchAsyncTask task = new SearchAsyncTask();
         task.execute(url);
+        setRetainInstance(true);
     }
 
     @Override
@@ -55,7 +58,7 @@ public class SearchActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View searchView = inflater.inflate(R.layout.fragment_search,container,false);
 
-        listView = (ListView)searchView.findViewById(R.id.searchList);
+        listView = (ListView)searchView.findViewById(android.R.id.list);
         mSearchResults = new ArrayList<>();
 
         return searchView;
@@ -63,7 +66,7 @@ public class SearchActivityFragment extends Fragment {
 
     public static SearchActivityFragment getUrl(String url){
         Bundle args = new Bundle();
-        args.putString(QUERY_URL,url);
+        args.putString(QUERY_URL, url);
 
         SearchActivityFragment searchActivityFragment = new SearchActivityFragment();
         searchActivityFragment.setArguments(args);
@@ -115,9 +118,9 @@ public class SearchActivityFragment extends Fragment {
                         searchResults.setName(requiredObject.getString("name"));
                         //searchResults.setDisplayAddress(createList(requiredObject.getJSONArray("display_address")));
                         //searchResults.setCategories(createList(requiredObject.getJSONArray("categories")));
-                        searchResults.setImageUrl(requiredObject.getString("image_url").replace('\\',' ').trim());
+                        searchResults.setImageUrl(requiredObject.getString("image_url"));
                         searchResults.setReviewCount(requiredObject.getInt("review_count"));
-                        searchResults.setRatingImgUrl(requiredObject.getString("rating_img_url").replace('\\',' ').trim());
+                        searchResults.setRatingImgUrl(requiredObject.getString("rating_img_url"));
                         searchResults.setSnippetText(requiredObject.getString("snippet_text"));
 
                         mSearchResults.add(searchResults);
@@ -162,9 +165,12 @@ public class SearchActivityFragment extends Fragment {
             super.onPostExecute(result);
 
             if(result.equals(true)){
-                Log.i("Testing_mSearchResults",mSearchResults.get(1).getName());
-                SearchResultsAdapter searchResultsAdapter = new SearchResultsAdapter
+                Log.i("Testing_mSearchResults", mSearchResults.get(1).getName());
+                mSearchResultsAdapter = new SearchResultsAdapter
                         (getActivity(),R.layout.search_result_row, mSearchResults );
+
+                listView.setAdapter(mSearchResultsAdapter);
+
             }else{
                 Toast.makeText(getContext(),"No results to show", Toast.LENGTH_SHORT).show();
             }
