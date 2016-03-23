@@ -31,7 +31,7 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
         super(context, resource, searchResults);
         mSearchResults = searchResults;
         this.resource = resource;
-        this.context = context;
+        this.context = context.getApplicationContext();
         view = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
     }
@@ -56,10 +56,11 @@ public class SearchResultsAdapter extends ArrayAdapter<SearchResults> {
             holder  = (ViewHolder)convertView.getTag();
 
         }
-        SearchActivityFragment.mResultsDownloader.queryResults(holder.restaurantImage, mSearchResults.get(position).getImageUrl());
-        SearchActivityFragment.mResultsDownloader.queryResults(holder.ratingsImage, mSearchResults.get(position).getRatingImgUrl());
-        /*new DownloadImageTask(holder.restaurantImage).execute(mSearchResults.get(position).getImageUrl());
-        new DownloadImageTask(holder.ratingsImage).execute(mSearchResults.get(position).getRatingImgUrl());*/
+        //Code implemented for handler and loopers
+       /* SearchActivityFragment.mResultsDownloader.queryResults(holder.restaurantImage, mSearchResults.get(position).getImageUrl());
+        SearchActivityFragment.mResultsDownloader.queryResults(holder.ratingsImage, mSearchResults.get(position).getRatingImgUrl());*/
+        new DownloadImageTask(holder.restaurantImage).execute(mSearchResults.get(position).getImageUrl());
+        new DownloadImageTask(holder.ratingsImage).execute(mSearchResults.get(position).getRatingImgUrl());
         holder.restaurantName.setText(mSearchResults.get(position).getName());
         int reviewCount = mSearchResults.get(position).getReviewCount();
         holder.reviewCount.setText(String.valueOf(reviewCount));

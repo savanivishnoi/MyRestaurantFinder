@@ -12,7 +12,12 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -56,14 +61,29 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.menu_search, menu);
         MenuItem searchItem = menu.findItem(R.id.search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
             @Override
             public boolean onQueryTextSubmit(String query) {
+                InputMethodManager mgr = (InputMethodManager)getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
+                mgr.hideSoftInputFromInputMethod(searchView.getWindowToken(),0);
+
+                String urlEncoder = null;
+                try {
+                    urlEncoder = URLEncoder.encode(query, "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+                SearchActivityFragment searchFragment = SearchActivityFragment.getUrl("term=restaurants&location=" + urlEncoder + "&");
+                fragmentManager.beginTransaction().replace(R.id.fragmentContainer, searchFragment).commit();
+
+
+
                 Log.i("search_results", query + " these are the search result");
                 Toast.makeText(getApplicationContext(), query, Toast.LENGTH_SHORT).show();
                 return true;
@@ -87,6 +107,10 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }else if( id == R.id.sortByRatings){
+            return true;
+        }else if( id == R.id.sortByRelevance){
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -98,26 +122,20 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_search) {
+
+
 
             android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
             SearchActivityFragment searchFragment = SearchActivityFragment.getUrl("location=sanjose&term=restaurants&");
             fragmentManager.beginTransaction().replace(R.id.fragmentContainer, searchFragment).commit();
             Log.i("Log_nav_camera", "Search fragment updated");
 
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_favourites) {
 
             FavouriteFragment favouriteFragment = new FavouriteFragment();
             android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction().replace(R.id.fragmentContainer, favouriteFragment).commit();
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
 
         }
 

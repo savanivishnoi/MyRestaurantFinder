@@ -1,17 +1,18 @@
 package cmpe.mobile.app.restaraunt.finder.restaurantfinder;
 
 
-import android.graphics.Bitmap;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import org.apache.http.HttpResponse;
@@ -41,8 +42,12 @@ public class SearchActivityFragment extends ListFragment {
     ListView listView;
     SearchResultsAdapter mSearchResultsAdapter;
     ArrayList<SearchResults> mSearchResults ;
+    SearchResultLab mSearchResultLab;
+    ProgressBar progress;
+
     public static final String QUERY_URL = "SearchActivityFragment.QUERY_URL";
     private static final String TAG = "SearchActivityFragment";
+
     static ResultsDownloader<ImageView> mResultsDownloader;
 
     public SearchActivityFragment() {
@@ -51,12 +56,13 @@ public class SearchActivityFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        String url = (String)getArguments().getString(QUERY_URL) + "radius_filter=17000&limit=20&";
 
-        SearchAsyncTask task = new SearchAsyncTask();
-        task.execute(url);
+
+
         setRetainInstance(true);
-        mResultsDownloader = new ResultsDownloader<ImageView>(new Handler());
+
+        //This following code is for implementation of handlers and loopers.
+      /*  mResultsDownloader = new ResultsDownloader<ImageView>(new Handler());
         mResultsDownloader.setListener(new ResultsDownloader.Listener<ImageView>(){
 
             @Override
@@ -68,13 +74,14 @@ public class SearchActivityFragment extends ListFragment {
         });
         mResultsDownloader.start();
         mResultsDownloader.getLooper();
-        Log.i(TAG, "Background thread started");
+        Log.i(TAG, "Background thread started");*/
     }
+
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mResultsDownloader.quit();
+  //      mResultsDownloader.quit();
         Log.i(TAG, "Background thread destroyed");
     }
 
@@ -82,9 +89,17 @@ public class SearchActivityFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View searchView = inflater.inflate(R.layout.fragment_search,container,false);
-
         listView = (ListView)searchView.findViewById(android.R.id.list);
-        mSearchResults = new ArrayList<>();
+
+        progress = (ProgressBar)searchView.findViewById(R.id.progressBar);
+        progress.setVisibility(View.VISIBLE);
+        String url = getArguments().getString(QUERY_URL) + "radius_filter=17000&limit=20&";
+        mSearchResultLab = SearchResultLab.getSearchResultLab(getContext());
+
+
+        SearchAsyncTask task = new SearchAsyncTask(progress);
+        task.execute(url);
+        mSearchResults = mSearchResultLab.getSearchResults();
 
         return searchView;
     }
@@ -92,7 +107,7 @@ public class SearchActivityFragment extends ListFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mResultsDownloader.clearQueue();
+//        mResultsDownloader.clearQueue();
     }
 
     public static SearchActivityFragment getUrl(String url){
@@ -106,6 +121,11 @@ public class SearchActivityFragment extends ListFragment {
     }
 
     public class SearchAsyncTask extends AsyncTask<String ,Void , Boolean> {
+
+        ProgressBar mProgressBar;
+        public SearchAsyncTask(ProgressBar progressBar){
+            mProgressBar = progressBar;
+        }
 
         @Override
         protected Boolean doInBackground(String... url) {
@@ -122,14 +142,10 @@ public class SearchActivityFragment extends ListFragment {
 
             // create an HTTP request to a protected resource
 
-            String requestUrl = null;
-
-
-
             try {
                 //Encoding the url
                // requestUrl = URLEncoder.encode(String.valueOf(url[0]), "UTF-8");
-                requestUrl = String.valueOf(url[0]);
+                String requestUrl = String.valueOf(url[0]);
                 HttpGet request = new HttpGet("https://api.yelp.com/v2/search?" + requestUrl);
 
                 consumer.sign(request);
@@ -149,6 +165,7 @@ public class SearchActivityFragment extends ListFragment {
                     for(int i = 0 ;i < jsonArray.length(); i ++){
                         SearchResults searchResults = new SearchResults();
                         JSONObject requiredObject =  jsonArray.getJSONObject(i);
+                        searchResults.setId(requiredObject.getString("id"));
                         searchResults.setName(requiredObject.getString("name"));
 
                         JSONObject display_address = requiredObject.getJSONObject("location");
@@ -161,7 +178,10 @@ public class SearchActivityFragment extends ListFragment {
 
 
                         searchResults.setRatingImgUrl(requiredObject.getString("rating_img_url_large"));
+
+                        // These two values are required for Search Fragment detail view.
                         searchResults.setSnippetText(requiredObject.getString("snippet_text"));
+                        searchResults.setPhone(requiredObject.getString("phone"));
 
                         mSearchResults.add(searchResults);
                     }
@@ -230,18 +250,29 @@ public class SearchActivityFragment extends ListFragment {
             }
             return null;
         }
+
         @Override
         protected void onPostExecute(Boolean result) {
             super.onPostExecute(result);
 
-            if(result.equals(true)){
-                Log.i("Testing_mSearchResults", mSearchResults.get(1).getName());
+            if(result.equals(true) && isVisible()){
+
                 mSearchResultsAdapter = new SearchResultsAdapter
                         (getActivity(),R.layout.search_result_row, mSearchResults );
 
                 listView.setAdapter(mSearchResultsAdapter);
+                mProgressBar.setVisibility(View.GONE);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        SearchResults sr = (SearchResults)parent.getItemAtPosition(position);
+                        Intent i = new Intent(getActivity(),DetailSearchPagerActivity.class);
+                        i.putExtra(DetailSearchFragment.SEARCH_RESULT_ID, sr.getId());
+                        startActivity(i);
+                    }
+                });
 
-            }else{
+            }else if(isVisible() && result.equals(false)){
                 Toast.makeText(getContext(),"No results to show", Toast.LENGTH_SHORT).show();
             }
 

@@ -9,4 +9,7 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_search">SearchActivity</string>
+    <string name="title_activity_detail_search">DetailSearchActivity</string>
+    <string name="menu_sort_by_relevance">Sort by Relevance</string>
+    <string name="menu_sort_by_ratings">Sort by Ratings</string>
 </resources>
