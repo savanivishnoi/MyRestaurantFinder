@@ -32,7 +32,7 @@ public class DBHandler extends SQLiteOpenHelper {
     public static final String DISPLAYPHONE = "displayphone";
     public static final String RATINGIMGURLLARGE = "ratingimgurllarge";
     public static final String ISCLAIMED = "isclaimed";
-    public static final String ISCLOSED = "isclosed";
+    public static final String ISCLOSED = "isclosed";* 
     public static final String GEOACCURACY = "geoaccuracy";*/
 
 
